@@ -44,7 +44,6 @@ class AuthController extends Controller
             $user = Auth::user();
 
             if ($user->is_admin) {
-                $request->session()->regenerate();
                 return response()->json(['message' => 'Admin login successful'], 200);
             } else {
                 return response()->json(['message' => 'User login successful'], 200);
@@ -52,16 +51,6 @@ class AuthController extends Controller
         } else {
             return response()->json(['message' => 'Invalid login credentials'], 401);
         }
-    }
-
-    public function logout(Request $request)
-    {
-        Auth::logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return response()->json(['message' => 'Logout successful'], 200);
     }
 
 }
