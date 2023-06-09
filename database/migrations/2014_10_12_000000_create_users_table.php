@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('gender', ['L', 'P']);
-            $table->year('birth_year');
-            $table->boolean('vip')->default(false);
+            $table->rememberToken();
+            $table->timestamps();
         });
     }
 
