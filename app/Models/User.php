@@ -17,7 +17,6 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-
     protected $guarded = ['id'];
 
     public $timestamps = false;
@@ -41,6 +40,4 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-
-
 }
