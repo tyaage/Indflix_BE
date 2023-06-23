@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GenreController;
 use App\Http\Controllers\MovieController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardAdminController;
@@ -45,4 +46,5 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     });
 
     Route::resource('/movie', MovieController::class);
+    Route::resource('/genre', GenreController::class);
 });
