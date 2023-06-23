@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('synopsis');
             $table->string('writer');
             $table->year('year');
+            $table->string('image')->nullable();
             $table->timestamps();
         });
     }

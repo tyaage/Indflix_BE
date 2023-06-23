@@ -22,6 +22,13 @@ class UserSeeder extends Seeder
             'vip' => true,
             'is_admin' => true,
         ]);
+        User::create([
+            'name' => 'Nauni',
+            'email' => 'nauni@gmail.com',
+            'password' => bcrypt('password'),
+            'gender' => 'L',
+            'birth_year' => '2000'
+        ]);
 
     }
 }
