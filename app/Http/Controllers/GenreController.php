@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Genre;
+use Illuminate\Http\Request;
 use App\Http\Requests\StoreGenreRequest;
 use App\Http\Requests\UpdateGenreRequest;
 
@@ -13,7 +14,8 @@ class GenreController extends Controller
      */
     public function index()
     {
-        //
+        $genres = Genre::all();
+        return view('admin.genre.index', compact('genres'));
     }
 
     /**
@@ -21,15 +23,21 @@ class GenreController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.genre.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreGenreRequest $request)
+    public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => 'required|unique:genre,name'
+        ]);
+
+        Genre::create($validatedData);
+
+        return redirect()->route('genre.index')->with('success', 'Genre created successfully.');
     }
 
     /**
@@ -45,15 +53,21 @@ class GenreController extends Controller
      */
     public function edit(Genre $genre)
     {
-        //
+        return view('admin.genre.edit', compact('genre'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateGenreRequest $request, Genre $genre)
+    public function update(Request $request, Genre $genre)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => 'required|unique:genre,name,' . $genre->id
+        ]);
+
+        $genre->update($validatedData);
+
+        return redirect()->route('genre.index')->with('success', 'Genre updated successfully.');
     }
 
     /**
@@ -61,6 +75,8 @@ class GenreController extends Controller
      */
     public function destroy(Genre $genre)
     {
-        //
+        $genre->delete();
+
+        return redirect()->route('genre.index')->with('success', 'Genre deleted successfully.');
     }
 }
