@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('password');
             $table->enum('gender', ['L', 'P']);
             $table->year('birth_year');
-            $table->boolean('vip')->default(false);
             $table->boolean('is_admin')->default(false);
         });
     }

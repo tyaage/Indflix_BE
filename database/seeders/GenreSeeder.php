@@ -31,9 +31,30 @@ class GenreSeeder extends Seeder
             'Dokumenter',
         ];
 
-        foreach ($genres as $genre) {
+        $slugs = [
+            'aksi',
+            'animasi',
+            'petualangan',
+            'komedi',
+            'drama',
+            'fantasi',
+            'horor',
+            'musikal',
+            'misteri',
+            'romantis',
+            'fiksi-ilmiah',
+            'thriller',
+            'perang',
+            'sejarah',
+            'dokumenter',
+        ];
+
+        $genresWithSlugs = array_combine($genres, $slugs);
+
+        foreach ($genresWithSlugs as $name => $slug) {
             Genre::create([
-                'name' => $genre,
+                'name' => $name,
+                'slug' => $slug,
             ]);
         }
     }

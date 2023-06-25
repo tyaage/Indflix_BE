@@ -105,6 +105,9 @@
     <label for="year">Year:</label>
     <input type="number" name="year" value="{{ $movie->year }}" required>
 
+    <label for="minimum_age">Year:</label>
+    <input type="number" name="minimum_age" value="{{ $movie->minimum_age }}" required>
+
     <label for="image">Image:</label>
     @if ($movie->image)
         <div class="current-image">
@@ -114,6 +117,8 @@
     @endif
     <input type="file" name="image">
 
+    <label for="video">Video:</label>
+    <input type="text" name="video" value="{{ $movie->video }}" required>
 
     <button type="submit">Update</button>
 </form>

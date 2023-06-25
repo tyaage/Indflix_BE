@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Genre;
 use App\Models\Movie;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class MovieController extends Controller
@@ -45,7 +48,12 @@ class MovieController extends Controller
             'image' => 'nullable|image|max:2048', // Batasan maksimum ukuran file adalah 2MB (2048 KB)
             'genres' => 'required|array',
             'genres.*' => 'exists:genre,id',
+            'minimum_age' => 'required|integer',
+            'video' => 'required|url',
         ]);
+
+        // Menghasilkan slug berdasarkan nama
+        $validatedData['slug'] = Str::slug($validatedData['name']);
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('public/images');
@@ -57,14 +65,6 @@ class MovieController extends Controller
         $movie->genre()->attach($validatedData['genres']);
 
         return redirect()->route('movie.index')->with('success', 'Movie created successfully.');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Movie $movie)
-    {
-        //
     }
 
     /**
@@ -91,6 +91,8 @@ class MovieController extends Controller
             'image' => 'nullable|image|max:2048',
             'genres' => 'required|array',
             'genres.*' => 'exists:genre,id',
+            'minimum_age' => 'required|integer',
+            'video' => 'required|url',
         ]);
 
         if ($request->has('delete_image')) {
@@ -101,6 +103,9 @@ class MovieController extends Controller
             $imagePath = $request->file('image')->store('public/images');
             $validatedData['image'] = Storage::url($imagePath);
         }
+
+        // Update slug based on name
+        $validatedData['slug'] = Str::slug($validatedData['name']);
 
         $movie->update($validatedData);
 
@@ -130,5 +135,42 @@ class MovieController extends Controller
 
         return redirect()->route('movie.index')->with('success', 'Movie deleted successfully.');
 
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($movie)
+    {
+        $movie = Movie::where('slug', $movie)->firstOrFail();
+
+         // Ambil informasi pengguna (misalnya dari sesi atau autentikasi)
+        $user = Auth::user();
+        $userBirthYear = $user->birth_year;
+        $userAge = date('Y') - $userBirthYear;
+
+        $minimum_age = $movie->minimum_age;
+        $isAllowed = $userAge >= $minimum_age;
+
+        // Cek apakah pengguna memenuhi batasan umur film
+        if ($isAllowed) {
+            return view('movie', compact('movie'));
+        } else {
+            return redirect()->back()->with('message', 'Anda tidak memenuhi batasan umur untuk menonton film ini.');
+        }
+    }
+
+    public function like($slug)
+    {
+        $movie = Movie::where('slug', $slug)->first();
+
+        if ($movie) {
+            $movie->likes += 1;
+            $movie->save();
+
+        return redirect()->back()->with('success', 'You liked the movie!');
+    }
+
+        return redirect()->back()->with('error', 'Movie not found.');
     }
 }
