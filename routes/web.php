@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\VipController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\MovieController;
@@ -33,7 +34,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/ubah-profile', 'ubahProfile')->name('ubah-profile-user');
 });
 
-Route::prefix('admin')->middleware('auth')->group(function () {
+Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardAdminController::class, 'index'])->name('admin.dashboard');
     Route::controller(AuthController::class)->group(function () {
         Route::get('/pengaturan', 'pengaturanAdmin')->name('admin.pengaturan');
@@ -48,3 +49,9 @@ Route::prefix('admin')->middleware('auth')->group(function () {
     Route::resource('/movie', MovieController::class);
     Route::resource('/genre', GenreController::class);
 });
+
+Route::get('/langganan-vip', [VipController::class, 'index']);
+Route::post('/langganan-vip', [VipController::class, 'subscribeVIP'])->name('langganan.vip');
+
+Route::get('/{movie}', [MovieController::class, 'show'])->middleware('auth');
+Route::post('/{slug}/like', [MovieController::class, 'like']);

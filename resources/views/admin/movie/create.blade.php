@@ -91,8 +91,14 @@
     <label for="year">Year:</label>
     <input type="number" name="year" required>
 
+    <label for="minimum_age">Minimum Age:</label>
+    <input type="number" name="minimum_age" required>
+
     <label for="image">Image:</label>
     <input type="file" name="image">
+
+    <label for="video">Video:</label>
+    <input type="text" name="video" required>
 
     <button type="submit">Add</button>
 </form>

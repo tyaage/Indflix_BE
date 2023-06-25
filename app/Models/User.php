@@ -3,10 +3,11 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Carbon\Carbon;
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -40,4 +41,28 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function vip()
+    {
+        return $this->hasOne(Vip::class);
+    }
+
+    public function isVip()
+    {
+        $currentDate = Carbon::now()->format('Y-m-d');
+        $vip = $this->vip()->where('end_date', '>=', $currentDate)->first();
+
+        return $vip ? true : false;
+    }
+
+    public function remainingVipDays()
+    {
+        if ($this->isVip()) {
+            $currentDate = Carbon::now()->format('Y-m-d');
+            $endDate = $this->vip->end_date;
+            return Carbon::parse($endDate)->diffInDays($currentDate);
+        }
+
+        return 0;
+    }
 }

@@ -19,7 +19,6 @@ class UserSeeder extends Seeder
             'password' => bcrypt('password'),
             'gender' => 'L',
             'birth_year' => '2000',
-            'vip' => true,
             'is_admin' => true,
         ]);
         User::create([
