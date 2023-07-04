@@ -28,6 +28,11 @@ Route::get('/', [DashboardController::class, 'index']);
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::middleware('auth:api')->group(function() {
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+});
 Route::post('/ubah-password', [AuthController::class, 'ubahPassword']);
 
 // Route::prefix('admin')->group(function () {

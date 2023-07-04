@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -19,6 +18,30 @@ class AuthController extends Controller
     }
 
     public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'oldInput' => $request->all(),
+                'message' => 'Username atau password salah!'
+            ], 401);
+        }
+
+        $user = Auth::user();
+        $token = $user->createToken('authToken')->accessToken;
+
+        return response()->json([
+            'message' => 'Login successful',
+            'user' => $user,
+            'token' => $token
+        ], 200);
+    }
+
+    public function login_(Request $request)
     {
         $credentials = $request->validate([
             'email' => 'required|email',
@@ -72,18 +95,13 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'message' => 'Registration successful'
-        ], 200);
+        ], 201);
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
-
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
-
-        return redirect('/');
+        $request->user()->token()->revoke();
+        return response()->json(['message' => 'Logout berhasil']);
     }
 
     public function pengaturan() {
