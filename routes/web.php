@@ -20,7 +20,7 @@ use App\Http\Controllers\DashboardAdminController;
 |
 */
 
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+// Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::controller(AuthController::class)->group(function () {
     Route::get('/login', 'index')->middleware('guest')->name('login');

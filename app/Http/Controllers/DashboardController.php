@@ -6,13 +6,12 @@ use App\Models\Movie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Response;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
-
         $bannerMovies = DB::table('movie')
             ->whereNotNull('image')
             ->inRandomOrder()
@@ -23,7 +22,15 @@ class DashboardController extends Controller
 
         $newestMovies = Movie::orderBy('created_at', 'desc')->take(10)->get();
 
-        return view('index', compact('user', 'bannerMovies', 'popularMovies', 'newestMovies'));
+        $data = [
+            'bannerMovies' => $bannerMovies,
+            'popularMovies' => $popularMovies,
+            'newestMovies' => $newestMovies,
+        ];
+
+        return response()->json($data, Response::HTTP_OK);
+
+        // return view('index', compact('user', 'bannerMovies', 'popularMovies', 'newestMovies'));
     }
 
 }

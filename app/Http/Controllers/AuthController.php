@@ -4,35 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+
 
 class AuthController extends Controller
 {
     public function index()
     {
         return view('auth.login');
-    }
-
-    public function authenticate(Request $request)
-    {
-        $credentials = $request->validate([
-            'username' => 'required',
-            'password' => 'required'
-        ]);
-
-        if(Auth::attempt($credentials)) {
-                $request->session()->regenerate();
-                return redirect()->intended('/dashboard');
-            }
-
-        return back()
-            ->withInput($request->only('username'))
-            ->withErrors([
-                'loginError' => 'Username atau Password salah.',
-            ]);
     }
 
     public function login(Request $request)
@@ -42,41 +25,21 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-
-            // Postman
-            // if ($user->is_admin) {
-            //     return response()->json(['message' => 'Admin login successful'], 200);
-            // } else {
-            //     return response()->json(['message' => 'User login successful'], 200);
-            // }
-
-            if ($user->is_admin) {
-                return redirect()->route('admin.dashboard'); // Mengarahkan admin ke dashboard admin
-            } else {
-                return redirect()->route('dashboard'); // Mengarahkan user biasa ke dashboard user
-            }
-
-        // Postman
-        // } else {
-        //     return response()->json(['message' => 'Invalid login credentials'], 401);
-        // }
-
-        } else {
-            return redirect()->back()->withInput()->withErrors(['message' => 'Username atau Password salah!']); // Mengarahkan kembali ke halaman login dengan pesan error
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'oldInput' => $request->all(),
+                'message' => 'Username atau password salah!'
+            ], 401);
         }
-    }
 
-    public function logout(Request $request)
-    {
-        Auth::logout();
+        $user = Auth::user();
+        $token = JWTAuth::fromUser($user);
 
-        $request->session()->invalidate();
+        return response()->json([
+            'token' => $token,
+            'user' => $user
+        ]);
 
-        $request->session()->regenerateToken();
-
-        return redirect('/');
     }
 
     public function indexRegister()
@@ -95,7 +58,10 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json([
+                'oldInput' => $request->all(),
+                'message' => $validator->errors()
+            ], 422);
         }
 
         // Buat user baru
@@ -103,10 +69,21 @@ class AuthController extends Controller
         $validatedData['password'] = Hash::make($request->password);
         $user = User::create($validatedData);
 
-        return redirect('/login');
+        return response()->json([
+            'user' => $user,
+            'message' => 'Registration successful'
+        ], 200);
+    }
 
-        // Postman
-        // return response()->json(['message' => 'Registration successful', 'user' => $user], 201);
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+
+        $request->session()->regenerateToken();
+
+        return redirect('/');
     }
 
     public function pengaturan() {
