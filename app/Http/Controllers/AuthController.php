@@ -41,30 +41,6 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function login_(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
-
-        if (!Auth::attempt($credentials)) {
-            return response()->json([
-                'oldInput' => $request->all(),
-                'message' => 'Username atau password salah!'
-            ], 401);
-        }
-
-        $user = Auth::user();
-        $token = JWTAuth::fromUser($user);
-
-        return response()->json([
-            'token' => $token,
-            'user' => $user
-        ]);
-
-    }
-
     public function indexRegister()
     {
         return view('auth.register');
@@ -116,54 +92,61 @@ class AuthController extends Controller
 
     public function ubahPassword(Request $request)
     {
-        // $user = $request->user();
         $user = Auth::user();
-
-        // Validasi data yang dikirimkan oleh pengguna
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'current_password' => 'required',
+            'new_password_confirmation' => 'required',
             'new_password' => 'required|string|min:6|confirmed',
-        ], [
-            'new_password.confirmed' => 'Konfirmasi password baru tidak sesuai.',
         ]);
 
-        // Memeriksa apakah password saat ini sesuai dengan yang ada di database
-        if (!Hash::check($request->current_password, $user->password)) {
-            throw ValidationException::withMessages([
-                'current_password' => ['Password Salah.'],
-            ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'oldInput' => $request->all(),
+                'message' => $validator->errors()
+            ], 422);
+        } elseif (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'oldInput' => $request->all(),
+                'message' => ['current_password' => ['Password saat ini salah.']]
+            ], 422);
         }
 
-        // Mengganti password sesuai dengan peran (role) yang sedang login
-        if ($user->is_admin == true) {
-            $user->password = Hash::make($request->new_password);
-            $user->save();
-        } elseif ($user->is_admin == false) {
-            $user->password = Hash::make($request->new_password);
-            $user->save();
-        }
+        $user->password = Hash::make($request->new_password);
+        $user->save();
 
-        return back()->with('password-success', 'Password telah berhasil diubah!');
+        return response()->json(['message' => 'Password telah berhasil diubah!'], 200);
     }
 
-    // Mengubah data profil pengguna
+
     public function ubahProfile(Request $request)
     {
-        $request->validate([
+        $user = Auth::user();
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,' . Auth::id(),
             'gender' => 'required|in:L,P',
             'birth_year' => 'required|integer|min:1900|max:' . date('Y'),
         ]);
 
-        $user = Auth::user();
+        if ($validator->fails()) {
+            return response()->json([
+                'user' => $user,
+                'oldInput' => $request->all(),
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+
         $user->name = $request->name;
         $user->email = $request->email;
         $user->gender = $request->gender;
         $user->birth_year = $request->birth_year;
         $user->save();
 
-        return redirect()->back()->with('profile-success', 'Profile has been updated successfully.');
+        return response()->json([
+            'message' => 'Profile telah berhasil diubah!',
+            'user' => $user
+        ], 200);
     }
 
 }

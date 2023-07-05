@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class MovieController extends Controller
 {
@@ -17,12 +18,9 @@ class MovieController extends Controller
      */
     public function index()
     {
-        // $movies = Movie::all();
-
-        // return view('admin.movie.index', compact('movies'));
         $movies = Movie::with('genre')->get();
 
-        return view('admin.movie.index', compact('movies'));
+        return response()->json(['data' => $movies]);
     }
 
     /**
@@ -31,7 +29,7 @@ class MovieController extends Controller
     public function create()
     {
         $genres = Genre::all();
-        return view('admin.movie.create', compact('genres'));
+        return response()->json(['data' => $genres]);
     }
 
     /**
@@ -39,7 +37,7 @@ class MovieController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required',
             'actor' => 'required',
             'synopsis' => 'required',
@@ -52,8 +50,64 @@ class MovieController extends Controller
             'video' => 'required|url',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'oldInput' => $request->all(),
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
         // Menghasilkan slug berdasarkan nama
-        $validatedData['slug'] = Str::slug($validatedData['name']);
+        $validatedData['slug'] = Str::slug($request->input('name'));
+        $validatedData['name'] = $request->input('name');
+        $validatedData['actor'] = $request->input('actor');
+        $validatedData['synopsis'] = $request->input('synopsis');
+        $validatedData['writer'] = $request->input('writer');
+        $validatedData['year'] = $request->input('year');
+        $validatedData['genres'] = $request->input('genres');
+        $validatedData['minimum_age'] = $request->input('minimum_age');
+        $validatedData['video'] = $request->input('video');
+
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $imagePath = $image->store('public/images');
+            $validatedData['image'] = Storage::url($imagePath);
+        }
+
+        $movie = Movie::create($validatedData);
+
+        $movie->genre()->attach($validatedData['genres']);
+
+        return response()->json([
+            'message' => 'Movie created successfully.'
+        ], 200);
+    }
+
+
+    public function store_(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'actor' => 'required',
+            'synopsis' => 'required',
+            'writer' => 'required',
+            'year' => 'required|integer',
+            'image' => 'nullable|image|max:2048', // Batasan maksimum ukuran file adalah 2MB (2048 KB)
+            'genres' => 'required|array',
+            'genres.*' => 'exists:genre,id',
+            'minimum_age' => 'required|integer',
+            'video' => 'required|url',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'oldInput' => $request->all(),
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Menghasilkan slug berdasarkan nama
+        $validatedData['slug'] = Str::slug($validator['name']);
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('public/images');
@@ -64,7 +118,9 @@ class MovieController extends Controller
 
         $movie->genre()->attach($validatedData['genres']);
 
-        return redirect()->route('movie.index')->with('success', 'Movie created successfully.');
+        return response()->json([
+            'message' => 'Movie created successfully.'
+        ], 200);
     }
 
     /**

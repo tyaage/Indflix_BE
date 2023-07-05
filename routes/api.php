@@ -31,20 +31,17 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:api')->group(function() {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/ubah-password', [AuthController::class, 'ubahPassword']);
+    Route::post('/ubah-profile', [AuthController::class, 'ubahProfile']);
 
+    Route::resource('/movie', MovieController::class);
+    Route::resource('/genre', GenreController::class);
 });
-Route::post('/ubah-password', [AuthController::class, 'ubahPassword']);
 
-// Route::prefix('admin')->group(function () {
-//     Route::resource('/movie', MovieController::class);
-//     Route::resource('/genre', GenreController::class);
-// });
+
+
+
 Route::get('/{movie}', [MovieController::class, 'show'])->middleware('auth');
-
-
-Route::post('/ubah-password', [AuthController::class, 'ubahPassword']);
-
-Route::post('/ubah-password', [AuthController::class, 'ubahPassword']);
 
 
 
