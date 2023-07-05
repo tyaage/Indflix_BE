@@ -2,7 +2,12 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\VipController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GenreController;
+use App\Http\Controllers\MovieController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,15 +24,24 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::get('/', [DashboardController::class, 'index']);
+
 Route::post('/register', [AuthController::class, 'register']);
-Route::get('/login', [AuthController::class, 'login']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/ubah-password', [AuthController::class, 'ubahPassword']);
+
+Route::middleware('auth:api')->group(function() {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/ubah-password', [AuthController::class, 'ubahPassword']);
+    Route::post('/ubah-profile', [AuthController::class, 'ubahProfile']);
+
+    Route::resource('/movie', MovieController::class);
+    Route::resource('/genre', GenreController::class);
+});
 
 
-Route::post('/ubah-password', [AuthController::class, 'ubahPassword']);
 
-Route::post('/ubah-password', [AuthController::class, 'ubahPassword']);
+
+Route::get('/{movie}', [MovieController::class, 'show'])->middleware('auth');
 
 
 

@@ -3,80 +3,87 @@
 namespace App\Http\Controllers;
 
 use App\Models\Genre;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreGenreRequest;
 use App\Http\Requests\UpdateGenreRequest;
+use Illuminate\Support\Facades\Validator;
 
 class GenreController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $genres = Genre::all();
-        return view('admin.genre.index', compact('genres'));
+        return response()->json(['data' => $genres]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('admin.genre.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|unique:genre,name'
         ]);
 
-        Genre::create($validatedData);
+        if ($validator->fails()) {
+            return response()->json([
+                'oldInput' => $request->all(),
+                'message' => $validator->errors()
+            ], 422);
+        }
 
-        return redirect()->route('genre.index')->with('success', 'Genre created successfully.');
+        // Menghasilkan slug berdasarkan nama
+        $slug = Str::slug($request->name);
+
+        $genre = new Genre();
+        $genre->name = $request->name;
+        $genre->slug = $slug;
+        $genre->save();
+
+        return response()->json(['message' => 'Genre telah berhasil dibuat!'], 200);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Genre $genre)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Genre $genre)
+    public function edit($id)
     {
-        return view('admin.genre.edit', compact('genre'));
+        $genre = Genre::findOrFail($id);
+
+        return response()->json($genre);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Genre $genre)
+    public function update(Request $request, $id)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|unique:genre,name,' . $genre->id
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|unique:genre,name,' . $id
         ]);
 
-        $genre->update($validatedData);
+        if ($validator->fails()) {
+            return response()->json([
+                'oldInput' => $request->all(),
+                'message' => $validator->errors()
+            ], 422);
+        }
 
-        return redirect()->route('genre.index')->with('success', 'Genre updated successfully.');
+        $genre = Genre::findOrFail($id);
+        $genre->name = $request->name;
+        $genre->slug = Str::slug($request->name);
+        $genre->save();
+
+        return response()->json(['message' => 'Genre telah berhasil diperbarui!'], 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Genre $genre)
+    public function destroy($id)
     {
+        $genre = Genre::findOrFail($id);
         $genre->delete();
 
-        return redirect()->route('genre.index')->with('success', 'Genre deleted successfully.');
+        return response()->json(['message' => 'Genre telah berhasil dihapus!'], 200);
     }
 }
